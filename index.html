@@ -1,0 +1,83 @@
+<!-- /index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>365 Positions Tracker</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>365 Positions Tracker</h1>
+    <div class="today-chip" id="todayChip" aria-live="polite"></div>
+  </header>
+
+  <main class="layout">
+    <section class="calendar-card">
+      <div class="calendar-header">
+        <button id="prevMonthBtn" class="btn" aria-label="Previous Month">&larr;</button>
+        <h2 id="monthLabel" class="month-label"></h2>
+        <button id="nextMonthBtn" class="btn" aria-label="Next Month">&rarr;</button>
+        <button id="goTodayBtn" class="btn ghost">Today</button>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="dot today"></span> Today</span>
+        <span class="legend-item"><span class="dot picked"></span> Picked</span>
+        <span class="legend-item"><span class="dot available"></span> Available</span>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Monthly calendar"></div>
+    </section>
+
+    <aside class="panel">
+      <div class="card">
+        <h3>Lock in Today’s Pick</h3>
+        <form id="pickForm" autocomplete="off">
+          <label for="dateInput">Date</label>
+          <input id="dateInput" name="date" type="date" required />
+
+          <label for="numberInput">Number (1–365)</label>
+          <input id="numberInput" name="number" type="number" min="1" max="365" required />
+
+          <div id="duplicateHint" class="hint" aria-live="polite"></div>
+
+          <button type="submit" class="btn primary">Lock In</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Progress</h3>
+        <p><strong>Picks Made:</strong> <span id="picksCount">0</span> / 365</p>
+        <p><strong>Remaining:</strong> <span id="remainingCount">365</span></p>
+        <p><strong>Last Picked:</strong> <span id="lastPicked">—</span></p>
+        <details>
+          <summary>Used Numbers</summary>
+          <div id="usedNumbers" class="used-numbers"></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>Backup & Sync</h3>
+        <div class="btn-row">
+          <button id="exportBtn" class="btn">Export JSON</button>
+          <label class="file-btn">
+            Import JSON<input id="importInput" type="file" accept="application/json" />
+          </label>
+        </div>
+        <p class="note">Use Export on one device and Import on another to keep in sync when using GitHub Pages (no server).</p>
+      </div>
+
+      <div class="card danger">
+        <h3>Danger Zone</h3>
+        <button id="resetBtn" class="btn danger">Reset All Data</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <small>Local-only storage. For multi-device, use Export/Import JSON. &middot; Made with ❤️</small>
+  </footer>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

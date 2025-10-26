@@ -1,10 +1,18 @@
 /* /assets/css/styles.css */
 :root{
-  --bg:#0e0f12; --card:#151821; --ink:#e8ebf0; --muted:#9aa3ad;
-  --accent:#6ee7b7; --accent-2:#93c5fd; --danger:#f87171; --warning:#fbbf24;
-  --ring:rgba(147,197,253,.35);
+  --bg:#0b0b0d;         /* near-black */
+  --card:#121217;       /* deep panel */
+  --ink:#f5f5f7;        /* text */
+  --muted:#a3a3ad;      /* subtler text */
+  --red:#ef4444;        /* crimson accent */
+  --red-2:#b91c1c;      /* deeper red */
+  --gold:#f59e0b;       /* gold accent */
+  --gold-2:#fbbf24;     /* lighter gold */
+  --ok:#22c55e;
+  --danger:#f87171;
+  --ring:rgba(245,158,11,.28); /* gold ring */
   --radius:16px;
-  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --shadow:0 10px 28px rgba(0,0,0,.45);
   --grid-gap:10px;
   --cell-size:100px;
   --transition:.18s ease;
@@ -12,90 +20,102 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial;
-  background:linear-gradient(180deg,#0b0c10,#0f121a 35%,#0a0c10);
+  margin:0;
+  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial;
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(127,29,29,.25), transparent 50%),
+              radial-gradient(1200px 600px at 120% 10%, rgba(180,83,9,.18), transparent 50%),
+              var(--bg);
   color:var(--ink);
 }
-.app-header, .app-footer{
-  max-width:1200px; margin:0 auto; padding:20px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.layout{
-  max-width:1200px; margin:0 auto; padding:20px; display:grid; gap:20px;
-  grid-template-columns:1.6fr .9fr;
-}
+
+/* Layout */
+.app-header,.app-footer{max-width:1200px;margin:0 auto;padding:20px;display:flex;align-items:center;justify-content:space-between}
+.layout{max-width:1200px;margin:0 auto;padding:20px;display:grid;gap:20px;grid-template-columns:1.6fr .9fr}
 @media (max-width:960px){ .layout{grid-template-columns:1fr} }
-.calendar-card{
-  background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
-}
-.panel{ display:grid; gap:16px }
-.card{
-  background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
-}
-.card.danger{ border:1px solid rgba(248,113,113,.35) }
+
 h1{font-size:22px;margin:0}
 h2{font-size:18px;margin:0}
 h3{font-size:16px;margin:0 0 10px}
-.month-label{ letter-spacing:.5px }
 .today-chip{ color:var(--muted) }
 
-.calendar-header{ display:flex; align-items:center; gap:10px }
-.legend{ display:flex; gap:16px; margin:10px 0 6px; color:var(--muted); font-size:12px }
-.legend .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle }
-.legend .today{ background:var(--accent-2) }
-.legend .picked{ background:var(--accent) }
-.legend .available{ background:#39404d }
+.card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.06)}
+.calendar-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.panel{display:grid;gap:16px}
 
-.calendar-grid{
-  display:grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap:var(--grid-gap);
-}
+/* Calendar */
+.calendar-header{display:flex;align-items:center;gap:10px}
+.month-label{letter-spacing:.5px}
+.legend{display:flex;gap:16px;margin:10px 0 6px;color:var(--muted);font-size:12px}
+.legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.legend .today{background:var(--gold)}
+.legend .picked{background:var(--red)}
+.legend .available{background:#2a2a33}
+
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--grid-gap)}
 .calendar-cell{
-  position:relative; min-height:var(--cell-size);
-  border-radius:12px; background:#11141b; padding:10px; transition:transform var(--transition), box-shadow var(--transition), background var(--transition);
-  border:1px solid rgba(255,255,255,.05);
+  position:relative;min-height:var(--cell-size);border-radius:12px;background:#0f0f14;padding:10px;
+  transition:transform var(--transition), box-shadow var(--transition), background var(--transition), outline var(--transition);
+  border:1px solid rgba(255,255,255,.05); text-align:left; color:inherit;
 }
-.calendar-cell:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.45) }
-.calendar-cell.disabled{ opacity:.35 }
-.calendar-cell .date{
-  font-size:12px; color:var(--muted)
-}
+.calendar-cell:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.5)}
+.calendar-cell.disabled{opacity:.35}
+.calendar-cell .date{font-size:12px;color:var(--muted)}
 .calendar-cell .badge{
-  position:absolute; right:8px; bottom:8px; padding:6px 10px; border-radius:999px; font-size:12px;
-  background:rgba(110,231,183,.15); color:var(--accent); border:1px solid rgba(110,231,183,.35);
+  position:absolute;right:8px;bottom:8px;padding:6px 10px;border-radius:999px;font-size:12px;
+  background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35);
 }
 .calendar-cell.today{
-  outline:2px solid var(--accent-2); box-shadow:0 0 0 6px var(--ring);
+  outline:2px solid var(--gold); box-shadow:0 0 0 6px var(--ring);
 }
-.calendar-cell.available{ background:#0f131a }
-.calendar-cell.picked{ background:rgba(110,231,183,.08) }
+.calendar-cell.available{background:#0f0f14}
+.calendar-cell.picked{background:linear-gradient(180deg, rgba(127,29,29,.18), rgba(0,0,0,.0))}
 
+/* Buttons & Inputs */
 .btn{
-  appearance:none; border:none; background:#202534; color:var(--ink);
-  padding:8px 12px; border-radius:10px; cursor:pointer; transition:background var(--transition), transform var(--transition);
+  appearance:none;border:none;background:#1a1a23;color:var(--ink);
+  padding:8px 12px;border-radius:10px;cursor:pointer;transition:background var(--transition), transform var(--transition), border var(--transition);
+  border:1px solid rgba(255,255,255,.08);
 }
-.btn:hover{ background:#2a3146 }
-.btn:active{ transform:translateY(1px) }
-.btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,.1) }
-.btn.primary{ background:linear-gradient(135deg,#4ade80,#60a5fa); color:#0b0c10; font-weight:600 }
-.btn.danger{ background:rgba(248,113,113,.15); color:#fecaca; border:1px solid rgba(248,113,113,.35) }
-.btn-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.btn:hover{background:#23232e}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent}
+.btn.primary{background:linear-gradient(135deg,var(--red),var(--gold));color:#1a1a1a;font-weight:700;border:none}
+.btn.danger{background:rgba(248,113,113,.12);color:#fecaca;border:1px solid rgba(248,113,113,.35)}
+.btn.tiny{padding:6px 10px;border-radius:8px;font-size:12px}
 
-label{ display:block; margin:10px 0 6px; color:var(--muted) }
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label{display:block;margin:10px 0 6px;color:var(--muted)}
 input[type="date"], input[type="number"]{
-  width:100%; padding:10px 12px; border-radius:10px; background:#0f131a; border:1px solid rgba(255,255,255,.08);
-  color:var(--ink); outline:none; transition:border var(--transition), box-shadow var(--transition);
+  width:100%;padding:10px 12px;border-radius:10px;background:#0f0f14;border:1px solid rgba(255,255,255,.1);color:var(--ink);outline:none;
+  transition:border var(--transition), box-shadow var(--transition);
 }
-input:focus{ border-color:var(--accent-2); box-shadow:0 0 0 4px var(--ring) }
+input:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--ring)}
+.file-btn{position:relative}.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-.file-btn{ position:relative }
-.file-btn input{ position:absolute; inset:0; opacity:0; cursor:pointer }
+.hint{min-height:18px;font-size:12px;color:var(--muted);margin-top:6px}
+.hint.error{color:#fecaca}
+.hint.ok{color:#a7f3d0}
 
-.hint{ min-height:18px; font-size:12px; color:var(--muted); margin-top:6px }
-.hint.error{ color:#fecaca }
-.hint.ok{ color:#a7f3d0 }
+.used-list{max-height:140px;overflow:auto;border:1px dashed rgba(255,255,255,.12);padding:8px;border-radius:8px;font-size:12px}
+.note{color:var(--muted);font-size:12px;margin-top:8px}
 
-.used-numbers{ max-height:140px; overflow:auto; border:1px dashed rgba(255,255,255,.1); padding:8px; border-radius:8px; font-size:12px }
-.app-footer{ color:var(--muted) }
-.note{ color:var(--muted); font-size:12px; margin-top:8px }
+/* Numbers Board */
+.numbers-board{max-width:1200px;margin:10px auto 20px}
+.numbers-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.numbers-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap:8px;
+}
+.num-chip{
+  display:flex;align-items:center;justify-content:center;
+  padding:10px 0;border-radius:10px;background:#12121a;border:1px solid rgba(255,255,255,.08);
+  font-size:12px;cursor:pointer;transition:transform var(--transition), background var(--transition), color var(--transition);
+}
+.num-chip:hover{transform:translateY(-1px);background:#181821}
+.num-chip.available{color:#ffe8b3;border-color:rgba(245,158,11,.35)}
+.num-chip.available:focus{outline:2px solid var(--gold)}
+.num-chip.used{
+  color:#b9b9c4;background:#0d0d12;cursor:not-allowed;opacity:.45;text-decoration:line-through;border-style:dashed;
+}
+.filter-active{outline:2px solid var(--gold)}

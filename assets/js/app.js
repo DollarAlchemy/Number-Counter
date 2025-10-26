@@ -1,5 +1,8 @@
-// /assets/js/app.js
-// Why: keep a single source of truth and enforce uniqueness.
+// /assets/js/app.js  (drop-in replacement)
+// Notes:
+// - Fixes month label not updating on Prev/Next
+// - Adds auto-advance at midnight (today watcher)
+
 const KEY = 'positionsTracker.v1';
 
 const seedEntries = [
@@ -16,8 +19,10 @@ const state = {
   entries: [],
   viewYear: new Date().getFullYear(),
   viewMonth: new Date().getMonth(),
-  numberFilter: 'all', // all | available | used
+  numberFilter: 'all',
 };
+
+let lastTodayISO = null; // why: detect midnight rollover
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -72,10 +77,9 @@ function isValidNumber(n) {
 /* ---------- Header ---------- */
 function renderHeader() {
   $('#monthLabel').textContent = monthLabel(state.viewYear, state.viewMonth);
-  const todayISO = todayLocalISO();
+  const tISO = todayLocalISO();
   const now = new Date();
-  $('#todayChip').textContent = `Today: ${todayISO} (${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})`;
-  $('#dateInput').value = todayISO;
+  $('#todayChip').textContent = `Today: ${tISO} (${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})`;
 }
 
 /* ---------- Calendar ---------- */
@@ -86,7 +90,7 @@ function renderCalendar() {
   const firstDay = new Date(state.viewYear, state.viewMonth, 1);
   const days = daysInMonth(state.viewYear, state.viewMonth);
   const dateMap = dateToEntryMap();
-  const todayISO = todayLocalISO();
+  const tISO = todayLocalISO();
 
   const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   for (const wd of weekdays) {
@@ -105,7 +109,7 @@ function renderCalendar() {
   for (let day=1; day<=days; day++) {
     const dateISO = `${state.viewYear}-${String(state.viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const number = dateMap.get(dateISO);
-    const isToday = dateISO === todayISO;
+    const isToday = dateISO === tISO;
 
     const cell = document.createElement('button');
     cell.type = 'button';
@@ -191,16 +195,47 @@ function showDuplicateHint(n) {
   }
 }
 
+/* ---------- Today watcher (midnight rollover) ---------- */
+function startTodayWatcher() {
+  lastTodayISO = todayLocalISO();
+  // Check every 30s; lightweight and robust
+  setInterval(() => {
+    const nowISO = todayLocalISO();
+    if (nowISO !== lastTodayISO) {
+      lastTodayISO = nowISO;
+
+      // Move view to the new current month
+      const now = new Date();
+      state.viewYear = now.getFullYear();
+      state.viewMonth = now.getMonth();
+
+      // Keep form date aligned with the new today
+      $('#dateInput').value = nowISO;
+
+      renderHeader();
+      renderCalendar();
+      // progress/board unaffected by date change but cheap to keep fresh
+      renderProgress();
+      renderNumbersBoard();
+    } else {
+      // Still same day: just keep the chip clock fresh
+      renderHeader();
+    }
+  }, 30000);
+}
+
 /* ---------- Events ---------- */
 function bindEvents() {
   $('#prevMonthBtn').addEventListener('click', () => {
     const m = state.viewMonth - 1;
     if (m < 0) { state.viewMonth = 11; state.viewYear -= 1; } else state.viewMonth = m;
+    renderHeader();   // FIX: update month label
     renderCalendar();
   });
   $('#nextMonthBtn').addEventListener('click', () => {
     const m = state.viewMonth + 1;
     if (m > 11) { state.viewMonth = 0; state.viewYear += 1; } else state.viewMonth = m;
+    renderHeader();   // FIX: update month label
     renderCalendar();
   });
   $('#goTodayBtn').addEventListener('click', () => {
@@ -316,11 +351,13 @@ function initViewMonthToToday() {
 function boot() {
   load();
   initViewMonthToToday();
+  $('#dateInput').value = todayLocalISO();
   renderHeader();
   renderCalendar();
   renderProgress();
   renderNumbersBoard();
   bindEvents();
   showDuplicateHint(undefined);
+  startTodayWatcher(); // NEW
 }
 document.addEventListener('DOMContentLoaded', boot);

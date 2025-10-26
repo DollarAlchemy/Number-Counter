@@ -1,13 +1,8 @@
 // /assets/js/app.js
-/* Minimal docs for future you:
-   - Data persisted in localStorage under KEY.
-   - Import replaces all; Export includes metadata.
-   - Editing disabled after lock-in to honor "cannot pick twice".
-*/
+// Why: keep a single source of truth and enforce uniqueness.
 const KEY = 'positionsTracker.v1';
 
 const seedEntries = [
-  // Seed your provided history (YYYY-MM-DD)
   { date: '2025-10-19', number: 213 },
   { date: '2025-10-20', number: 112 },
   { date: '2025-10-21', number: 189 },
@@ -20,17 +15,19 @@ const seedEntries = [
 const state = {
   entries: [],
   viewYear: new Date().getFullYear(),
-  viewMonth: new Date().getMonth(), // 0-11
+  viewMonth: new Date().getMonth(),
+  numberFilter: 'all', // all | available | used
 };
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+/* ---------- Storage ---------- */
 function load() {
   const raw = localStorage.getItem(KEY);
   if (!raw) {
     state.entries = seedEntries.slice();
-    save(); // initialize
+    save();
   } else {
     try {
       const parsed = JSON.parse(raw);
@@ -46,14 +43,11 @@ function save() {
   localStorage.setItem(KEY, JSON.stringify({ entries: state.entries }));
 }
 
-function fmtDate(d) {
-  return d.toISOString().slice(0,10);
-}
+/* ---------- Utils ---------- */
 function todayLocalISO() {
   const d = new Date();
   const tzOffsetMs = d.getTimezoneOffset() * 60000;
-  const local = new Date(d - tzOffsetMs);
-  return local.toISOString().slice(0,10);
+  return new Date(d - tzOffsetMs).toISOString().slice(0,10);
 }
 function monthLabel(year, monthIdx) {
   return new Date(year, monthIdx, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' });
@@ -75,28 +69,25 @@ function isValidNumber(n) {
   return Number.isInteger(n) && n >= 1 && n <= 365;
 }
 
+/* ---------- Header ---------- */
 function renderHeader() {
   $('#monthLabel').textContent = monthLabel(state.viewYear, state.viewMonth);
   const todayISO = todayLocalISO();
   const now = new Date();
   $('#todayChip').textContent = `Today: ${todayISO} (${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})`;
-  // Prefill form with today
   $('#dateInput').value = todayISO;
 }
 
+/* ---------- Calendar ---------- */
 function renderCalendar() {
   const grid = $('#calendarGrid');
   grid.innerHTML = '';
 
   const firstDay = new Date(state.viewYear, state.viewMonth, 1);
-  const startWeekday = (firstDay.getDay() + 6) % 7; // Mon=0 ... Sun=6
-  // For simplicity keep Sun-first UI; using startWeekday = firstDay.getDay();
-
   const days = daysInMonth(state.viewYear, state.viewMonth);
   const dateMap = dateToEntryMap();
   const todayISO = todayLocalISO();
 
-  // Weekday header
   const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   for (const wd of weekdays) {
     const head = document.createElement('div');
@@ -105,8 +96,6 @@ function renderCalendar() {
     head.innerHTML = `<div class="date" style="font-weight:600">${wd}</div>`;
     grid.appendChild(head);
   }
-
-  // Leading blanks
   for (let i=0;i<firstDay.getDay();i++){
     const blank = document.createElement('div');
     blank.className = 'calendar-cell disabled';
@@ -128,7 +117,6 @@ function renderCalendar() {
       ${number ? `<div class="badge">#${number}</div>` : ''}
     `;
     cell.addEventListener('click', () => {
-      // Focus that date in the form; prevent editing if already picked
       $('#dateInput').value = dateISO;
       if (!number) $('#numberInput').focus();
     });
@@ -136,6 +124,7 @@ function renderCalendar() {
   }
 }
 
+/* ---------- Progress ---------- */
 function renderProgress() {
   const used = usedNumbersMap();
   $('#picksCount').textContent = used.size;
@@ -148,21 +137,53 @@ function renderProgress() {
     $('#lastPicked').textContent = '—';
   }
 
-  // Used numbers list
   const sorted = [...state.entries].sort((a,b)=>a.number-b.number);
-  const container = $('#usedNumbers');
+  const container = $('#usedList');
   container.innerHTML = sorted.length
     ? sorted.map(e => `<code>#${String(e.number).padStart(3,'0')}</code> <small>(${e.date})</small>`).join('<br/>')
     : '<small>No picks yet.</small>';
 }
 
+/* ---------- Numbers Board ---------- */
+function renderNumbersBoard() {
+  const grid = $('#numbersGrid');
+  const used = usedNumbersMap();
+  const filter = state.numberFilter;
+  grid.innerHTML = '';
+
+  for (let n=1; n<=365; n++) {
+    const isUsed = used.has(n);
+    if (filter === 'available' && isUsed) continue;
+    if (filter === 'used' && !isUsed) continue;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `num-chip ${isUsed ? 'used' : 'available'}`;
+    btn.textContent = n;
+    if (!isUsed) {
+      btn.addEventListener('click', () => {
+        $('#numberInput').value = n;
+        showDuplicateHint(n);
+        $('#numberInput').focus();
+      });
+    } else {
+      btn.disabled = true;
+      btn.title = `Used on ${used.get(n)}`;
+    }
+    grid.appendChild(btn);
+  }
+
+  $$('.numbers-header .btn.tiny').forEach(b => b.classList.toggle('filter-active', b.dataset.filter === filter));
+}
+
+/* ---------- Validation Hint ---------- */
 function showDuplicateHint(n) {
   const hint = $('#duplicateHint');
   const used = usedNumbersMap();
   if (!n) { hint.textContent = ''; hint.className = 'hint'; return; }
   if (!isValidNumber(n)) { hint.textContent = 'Enter a number between 1 and 365.'; hint.className = 'hint error'; return; }
   if (used.has(n)) {
-    hint.textContent = `#${n} already used on ${used.get(n)}. Pick a different number.`;
+    hint.textContent = `#${n} already used on ${used.get(n)}.`;
     hint.className = 'hint error';
   } else {
     hint.textContent = `#${n} is available.`;
@@ -170,6 +191,7 @@ function showDuplicateHint(n) {
   }
 }
 
+/* ---------- Events ---------- */
 function bindEvents() {
   $('#prevMonthBtn').addEventListener('click', () => {
     const m = state.viewMonth - 1;
@@ -194,12 +216,18 @@ function bindEvents() {
     showDuplicateHint(n);
   });
 
+  $$('.numbers-header .btn.tiny').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.numberFilter = btn.dataset.filter;
+      renderNumbersBoard();
+    });
+  });
+
   $('#pickForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const date = $('#dateInput').value;
     const n = parseInt($('#numberInput').value, 10);
 
-    // Guard rails
     if (!date) return alert('Select a date.');
     if (!isValidNumber(n)) return alert('Enter a valid number (1–365).');
 
@@ -214,16 +242,15 @@ function bindEvents() {
 
     state.entries.push({ date, number: n });
     save();
-    // Clear number but keep date for next action
+
     $('#numberInput').value = '';
     showDuplicateHint(undefined);
 
-    // Jump calendar to month of selected date for visual feedback
     const d = new Date(date);
     state.viewYear = d.getFullYear();
     state.viewMonth = d.getMonth();
 
-    renderHeader(); renderCalendar(); renderProgress();
+    renderHeader(); renderCalendar(); renderProgress(); renderNumbersBoard();
   });
 
   $('#exportBtn').addEventListener('click', () => {
@@ -247,7 +274,6 @@ function bindEvents() {
       const json = JSON.parse(text);
       if (!Array.isArray(json?.entries)) throw new Error('Invalid file: missing entries[]');
 
-      // Validate shape and uniqueness
       const seenNums = new Set();
       const seenDates = new Set();
       for (const it of json.entries) {
@@ -263,7 +289,7 @@ function bindEvents() {
 
       state.entries = json.entries;
       save();
-      renderHeader(); renderCalendar(); renderProgress();
+      renderHeader(); renderCalendar(); renderProgress(); renderNumbersBoard();
       alert('Import successful.');
     } catch (err) {
       alert(`Import failed: ${(err && err.message) || err}`);
@@ -277,25 +303,24 @@ function bindEvents() {
     if (!ok) return;
     state.entries = [];
     save();
-    renderHeader(); renderCalendar(); renderProgress();
+    renderHeader(); renderCalendar(); renderProgress(); renderNumbersBoard();
   });
 }
 
+/* ---------- Boot ---------- */
 function initViewMonthToToday() {
   const now = new Date();
   state.viewYear = now.getFullYear();
   state.viewMonth = now.getMonth();
 }
-
 function boot() {
   load();
   initViewMonthToToday();
   renderHeader();
   renderCalendar();
   renderProgress();
+  renderNumbersBoard();
   bindEvents();
-  // Initial hint
   showDuplicateHint(undefined);
 }
-
 document.addEventListener('DOMContentLoaded', boot);

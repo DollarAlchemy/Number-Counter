@@ -21,17 +21,19 @@
         <button id="nextMonthBtn" class="btn" aria-label="Next Month">&rarr;</button>
         <button id="goTodayBtn" class="btn ghost">Today</button>
       </div>
+
       <div class="legend">
         <span class="legend-item"><span class="dot today"></span> Today</span>
         <span class="legend-item"><span class="dot picked"></span> Picked</span>
         <span class="legend-item"><span class="dot available"></span> Available</span>
       </div>
+
       <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Monthly calendar"></div>
     </section>
 
     <aside class="panel">
       <div class="card">
-        <h3>Lock in Today’s Pick</h3>
+        <h3>Lock in a Pick</h3>
         <form id="pickForm" autocomplete="off">
           <label for="dateInput">Date</label>
           <input id="dateInput" name="date" type="date" required />
@@ -51,8 +53,8 @@
         <p><strong>Remaining:</strong> <span id="remainingCount">365</span></p>
         <p><strong>Last Picked:</strong> <span id="lastPicked">—</span></p>
         <details>
-          <summary>Used Numbers</summary>
-          <div id="usedNumbers" class="used-numbers"></div>
+          <summary>Used Numbers (by value)</summary>
+          <div id="usedList" class="used-list"></div>
         </details>
       </div>
 
@@ -64,7 +66,7 @@
             Import JSON<input id="importInput" type="file" accept="application/json" />
           </label>
         </div>
-        <p class="note">Use Export on one device and Import on another to keep in sync when using GitHub Pages (no server).</p>
+        <p class="note">Static site: data is local to your browser. Use Export/Import to move between devices.</p>
       </div>
 
       <div class="card danger">
@@ -74,8 +76,21 @@
     </aside>
   </main>
 
+  <section class="numbers-board card">
+    <div class="numbers-header">
+      <h3>Numbers Board (1–365)</h3>
+      <div class="btn-row">
+        <button class="btn tiny" data-filter="all">All</button>
+        <button class="btn tiny" data-filter="available">Available</button>
+        <button class="btn tiny" data-filter="used">Used</button>
+      </div>
+    </div>
+    <div id="numbersGrid" class="numbers-grid" aria-label="Numbers board"></div>
+    <p class="note">Click an available number to prefill the form. Used numbers are disabled/greyed.</p>
+  </section>
+
   <footer class="app-footer">
-    <small>Local-only storage. For multi-device, use Export/Import JSON. &middot; Made with ❤️</small>
+    <small>Local-only storage. For multi-device, export/import JSON. &middot; Theme: red/black/gold.</small>
   </footer>
 
   <script type="module" src="assets/js/app.js"></script>
